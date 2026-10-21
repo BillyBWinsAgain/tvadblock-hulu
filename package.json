@@ -1,12 +1,12 @@
 {
   "name": "tvadblock-hulu",
   "appName": "Hulu (uBlock)",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Hulu website with uBlock Origin's Hulu rules (uAssets) injected. Contains code from uBlock Origin, GPLv3.",
   "packageType": "mods",
   "websiteURL": "https://www.hulu.com/hub/home",
   "main": "dist/userScript.js",
-  "evaluateScriptOnDocumentStart": true,
+  "evaluateScriptOnDocumentStart": false,
   "keys": ["MediaPlayPause", "MediaPlay", "MediaPause", "MediaStop", "MediaFastForward", "MediaRewind"],
   "license": "GPL-3.0-or-later"
 }
