@@ -1883,6 +1883,10 @@ try {
       if (/auth\.hulu\.com|\/login|\/account/.test(location.href)) {
         return;
       }
+      if (/^\/welcome/.test(location.pathname)) {
+        signinPrompt();
+        return;
+      }
       var saved = null;
       try {
         saved = JSON.parse(sessionStorage.getItem("tvab-stack") || "null");
@@ -1914,6 +1918,6 @@ try {
 } catch (e) {
 }
 try {
-  window.__tvabFocus && window.__tvabFocus("input[type=email], input[name*=email i], input[autocomplete=username], input[autocomplete=email]");
+  window.__tvabFocus && window.__tvabFocus("input[type=password], input[type=email], input[name*=email i], input[autocomplete=username], input[autocomplete=email]");
 } catch (e) {
 }
