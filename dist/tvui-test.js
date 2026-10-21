@@ -64,8 +64,9 @@
     }
     function toTile(item) {
         if (item._type === 'episode' || item._type === 'movie') {
-            var p = anyArt(item.artwork) || anyArt(item.series_artwork);
-            return { label: item.name || '', image: p ? p + (p.indexOf('?') < 0 ? '?' : '&') + 'size=480x270&format=jpeg' : '', play: item.id, browse: null };
+            var sz = function (u) { return u ? u + (u.indexOf('?') < 0 ? '?' : '&') + 'size=480x270&format=jpeg' : ''; };
+            var p = anyArt(item.artwork), fb = anyArt(item.series_artwork);
+            return { label: item.name || '', image: sz(p || fb), fallback: sz(fb), play: item.id, browse: null };
         }
         var a = item.actions || {};
         var playId = a.playback ? eabToId(a.playback.eab) : null;
@@ -125,11 +126,14 @@
         root.appendChild(hdr);
         var rowsEl = el('div', 'rows'); root.appendChild(rowsEl);
         scr.rows.forEach(function (row, ri) {
-            var rEl = el('div', 'row'); rEl.appendChild(el('h2', null, row.name));
+            var rEl = el('div', 'row'); if (ri < scr.r - 2 || ri > scr.r + 4) { rowsEl.appendChild(rEl); return; } rEl.appendChild(el('h2', null, row.name));
             var strip = el('div', 'strip');
             row.items.forEach(function (t, ci) {
                 var tile = el('div', 'tile' + (ri === scr.r && ci === scr.c ? ' f' : ''));
-                if (t.image) { tile.style.backgroundImage = 'url("' + t.image + '")'; }
+                var cc = ri === scr.r ? scr.c : (row.c || 0);
+                // only load images near the highlight (TV memory/CPU): rows r-1..r+2, tiles c-2..c+6
+                if (t.image && ri >= scr.r - 1 && ri <= scr.r + 2 && ci >= cc - 2 && ci <= cc + 6) { (function (tileEl, tt) { tileEl.style.backgroundImage = 'url("' + tt.image + '")';
+                    if (tt.fallback && tt.fallback !== tt.image) { var probe = new Image(); probe.onerror = function () { tileEl.style.backgroundImage = 'url("' + tt.fallback + '")'; }; probe.src = tt.image; } })(tile, t); }
                 tile.appendChild(el('span', null, t.label));
                 strip.appendChild(tile);
             });
