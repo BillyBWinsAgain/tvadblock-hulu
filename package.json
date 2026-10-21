@@ -1,7 +1,7 @@
 {
   "name": "tvadblock-hulu",
   "appName": "Hulu (uBlock)",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Hulu website with uBlock Origin's Hulu rules (uAssets) injected. Contains code from uBlock Origin, GPLv3.",
   "packageType": "mods",
   "websiteURL": "https://www.hulu.com/hub/home",
