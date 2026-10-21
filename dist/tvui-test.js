@@ -15,10 +15,12 @@
             return r.json();
         });
     }
+    // Hulu's image service: request what hulu.com itself requests (600x338 webp). 480x270 jpeg 404s for some art.
+    function hsz(u) { return u ? u + (u.indexOf('?') < 0 ? '?' : '&') + 'size=600x338&format=webp' : ''; }
     function img(item, kind) {
         try {
             var a = item.visuals.artwork[kind || 'horizontal_tile'] || item.visuals.artwork.horizontal;
-            return a.image.path + '&size=480x270&format=jpeg';
+            return hsz(a.image.path);
         } catch (e) { return ''; }
     }
     function title(item) {
@@ -64,9 +66,7 @@
     }
     function toTile(item) {
         if (item._type === 'episode' || item._type === 'movie') {
-            var sz = function (u) { return u ? u + (u.indexOf('?') < 0 ? '?' : '&') + 'size=480x270&format=jpeg' : ''; };
-            var p = anyArt(item.artwork), fb = anyArt(item.series_artwork);
-            return { label: item.name || '', image: sz(p || fb), fallback: sz(fb), play: item.id, browse: null };
+            return { label: item.name || '', image: hsz(anyArt(item.artwork) || anyArt(item.series_artwork)), play: item.id, browse: null };
         }
         var a = item.actions || {};
         var playId = a.playback ? eabToId(a.playback.eab) : null;
@@ -132,8 +132,7 @@
                 var tile = el('div', 'tile' + (ri === scr.r && ci === scr.c ? ' f' : ''));
                 var cc = ri === scr.r ? scr.c : (row.c || 0);
                 // only load images near the highlight (TV memory/CPU): rows r-1..r+2, tiles c-2..c+6
-                if (t.image && ri >= scr.r - 1 && ri <= scr.r + 2 && ci >= cc - 2 && ci <= cc + 6) { (function (tileEl, tt) { tileEl.style.backgroundImage = 'url("' + tt.image + '")';
-                    if (tt.fallback && tt.fallback !== tt.image) { var probe = new Image(); probe.onerror = function () { tileEl.style.backgroundImage = 'url("' + tt.fallback + '")'; }; probe.src = tt.image; } })(tile, t); }
+                if (t.image && ri >= scr.r - 1 && ri <= scr.r + 2 && ci >= cc - 2 && ci <= cc + 6) { tile.style.backgroundImage = 'url("' + t.image + '")'; }
                 tile.appendChild(el('span', null, t.label));
                 strip.appendChild(tile);
             });
