@@ -55,7 +55,18 @@
     var root = null;
     function el(tag, cls, text) { var e = document.createElement(tag); if (cls) { e.className = cls; } if (text != null) { e.textContent = text; } return e; }
 
+    function anyArt(art) {
+        if (!art) { return ''; }
+        var pref = ['video.horizontal.hero', 'program.tile', 'horizontal_tile', 'horizontal'];
+        for (var i = 0; i < pref.length; i++) { if (art[pref[i]] && art[pref[i]].path) { return art[pref[i]].path; } if (art[pref[i]] && art[pref[i]].image && art[pref[i]].image.path) { return art[pref[i]].image.path; } }
+        for (var k in art) { var v = art[k]; if (v && (v.path || (v.image && v.image.path))) { return v.path || v.image.path; } }
+        return '';
+    }
     function toTile(item) {
+        if (item._type === 'episode' || item._type === 'movie') {
+            var p = anyArt(item.artwork) || anyArt(item.series_artwork);
+            return { label: item.name || '', image: p ? p + (p.indexOf('?') < 0 ? '?' : '&') + 'size=480x270&format=jpeg' : '', play: item.id, browse: null };
+        }
         var a = item.actions || {};
         var playId = a.playback ? eabToId(a.playback.eab) : null;
         var browse = a.browse && a.browse.href && /\/hubs\/(series|movie)\//.test(a.browse.href) ? a.browse.href : null;
