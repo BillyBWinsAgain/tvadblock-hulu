@@ -1288,577 +1288,631 @@ ${safe.JSON_stringify(objAfter, null, 2)}`);
   } catch (e) {
   }
 })();
-(function tvabNav() {
-  if (window.__tvabNav) {
-    return;
-  }
-  window.__tvabNav = true;
-  var SEL = 'a[href], button, input:not([type=hidden]), select, textarea, [role=button], [role=link], [role=tab], [role=menuitem], [tabindex]:not([tabindex="-1"]), [onclick]';
-  var current = null;
-  function addStyle() {
-    if (document.getElementById("tvab-nav-style")) {
+try {
+  (function tvabReport() {
+    if (window.__tvabReport || typeof tizen === "undefined") {
       return;
     }
-    var st = document.createElement("style");
-    st.id = "tvab-nav-style";
-    st.textContent = ".tvab-focus { outline: 6px solid #ffcc00 !important; outline-offset: 3px !important; box-shadow: 0 0 0 9px rgba(0,0,0,.6) !important; border-radius: 6px; }";
-    (document.head || document.documentElement).appendChild(st);
-  }
-  function visible(el) {
-    var r = el.getBoundingClientRect();
-    if (r.width < 4 || r.height < 4) {
-      return false;
+    window.__tvabReport = true;
+    var svc = /hulu\.com$/.test(location.hostname) ? "hulu" : /max\.com$/.test(location.hostname) ? "max" : "web";
+    function send(step, msg) {
+      try {
+        new Image().src = "http://192.168.0.19:8199/r/" + svc + "/page-" + step + "?m=" + encodeURIComponent(String(msg).slice(0, 300));
+      } catch (e) {
+      }
     }
-    var cs = getComputedStyle(el);
-    return cs.visibility !== "hidden" && cs.display !== "none" && cs.opacity !== "0" && !el.disabled;
-  }
-  function candidates() {
-    return Array.prototype.filter.call(document.querySelectorAll(SEL), visible);
-  }
-  function center(el) {
-    var r = el.getBoundingClientRect();
-    return { x: r.left + r.width / 2, y: r.top + r.height / 2, r };
-  }
-  function setCurrent(el) {
-    if (current) {
-      current.classList.remove("tvab-focus");
-    }
-    current = el;
-    if (!el) {
+    send("load", location.origin + location.pathname);
+    window.addEventListener("error", function(e) {
+      send("error", (e.message || "") + " @" + (e.filename || "").split("?")[0] + ":" + e.lineno);
+    });
+    window.addEventListener("unhandledrejection", function(e) {
+      send("reject", e.reason && (e.reason.message || e.reason));
+    });
+  })();
+} catch (e) {
+}
+try {
+  (function tvabNav() {
+    if (window.__tvabNav) {
       return;
     }
-    addStyle();
-    el.classList.add("tvab-focus");
-    try {
-      el.focus({ preventScroll: true });
-    } catch (e) {
+    window.__tvabNav = true;
+    var SEL = 'a[href], button, input:not([type=hidden]), select, textarea, [role=button], [role=link], [role=tab], [role=menuitem], [tabindex]:not([tabindex="-1"]), [onclick]';
+    var current = null;
+    function addStyle() {
+      if (document.getElementById("tvab-nav-style")) {
+        return;
+      }
+      var st = document.createElement("style");
+      st.id = "tvab-nav-style";
+      st.textContent = ".tvab-focus { outline: 6px solid #ffcc00 !important; outline-offset: 3px !important; box-shadow: 0 0 0 9px rgba(0,0,0,.6) !important; border-radius: 6px; }";
+      var host = document.head || document.documentElement;
+      if (!host) {
+        return;
+      }
+      host.appendChild(st);
     }
-    el.scrollIntoView({ block: "center", inline: "nearest" });
-  }
-  function first() {
-    var c = candidates();
-    var inView = c.filter(function(el) {
+    function visible(el) {
       var r = el.getBoundingClientRect();
-      return r.top >= 0 && r.top < innerHeight;
-    });
-    return inView[0] || c[0] || null;
-  }
-  function move(dir) {
-    var c = candidates();
-    if (!current || c.indexOf(current) < 0) {
-      setCurrent(first());
-      return;
+      if (r.width < 4 || r.height < 4) {
+        return false;
+      }
+      var cs = getComputedStyle(el);
+      return cs.visibility !== "hidden" && cs.display !== "none" && cs.opacity !== "0" && !el.disabled;
     }
-    var a = center(current), best = null, bestScore = Infinity;
-    c.forEach(function(el) {
-      if (el === current || current.contains(el) || el.contains(current)) {
+    function candidates() {
+      return Array.prototype.filter.call(document.querySelectorAll(SEL), visible);
+    }
+    function center(el) {
+      var r = el.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2, r };
+    }
+    function setCurrent(el) {
+      if (current) {
+        current.classList.remove("tvab-focus");
+      }
+      current = el;
+      if (!el) {
         return;
       }
-      var b = center(el), dx = b.x - a.x, dy = b.y - a.y;
-      var primary, cross;
-      if (dir === "left") {
-        if (b.r.right > a.r.left + 2) {
+      addStyle();
+      el.classList.add("tvab-focus");
+      try {
+        el.focus({ preventScroll: true });
+      } catch (e) {
+      }
+      el.scrollIntoView({ block: "center", inline: "nearest" });
+    }
+    function first() {
+      var c = candidates();
+      var inView = c.filter(function(el) {
+        var r = el.getBoundingClientRect();
+        return r.top >= 0 && r.top < innerHeight;
+      });
+      return inView[0] || c[0] || null;
+    }
+    function move(dir) {
+      var c = candidates();
+      if (!current || c.indexOf(current) < 0) {
+        setCurrent(first());
+        return;
+      }
+      var a = center(current), best = null, bestScore = Infinity;
+      c.forEach(function(el) {
+        if (el === current || current.contains(el) || el.contains(current)) {
           return;
         }
-        primary = -dx;
-        cross = Math.abs(dy);
-      } else if (dir === "right") {
-        if (b.r.left < a.r.right - 2) {
-          return;
+        var b = center(el), dx = b.x - a.x, dy = b.y - a.y;
+        var primary, cross;
+        if (dir === "left") {
+          if (b.r.right > a.r.left + 2) {
+            return;
+          }
+          primary = -dx;
+          cross = Math.abs(dy);
+        } else if (dir === "right") {
+          if (b.r.left < a.r.right - 2) {
+            return;
+          }
+          primary = dx;
+          cross = Math.abs(dy);
+        } else if (dir === "up") {
+          if (b.r.bottom > a.r.top + 2) {
+            return;
+          }
+          primary = -dy;
+          cross = Math.abs(dx);
+        } else {
+          if (b.r.top < a.r.bottom - 2) {
+            return;
+          }
+          primary = dy;
+          cross = Math.abs(dx);
         }
-        primary = dx;
-        cross = Math.abs(dy);
+        var score = primary + cross * 2.5;
+        if (score < bestScore) {
+          bestScore = score;
+          best = el;
+        }
+      });
+      if (best) {
+        setCurrent(best);
+      } else if (dir === "down") {
+        window.scrollBy(0, innerHeight * 0.6);
       } else if (dir === "up") {
-        if (b.r.bottom > a.r.top + 2) {
+        window.scrollBy(0, -innerHeight * 0.6);
+      }
+    }
+    function isText(el) {
+      return el && (el.tagName === "TEXTAREA" || el.tagName === "INPUT" && !/^(button|submit|checkbox|radio|reset|image)$/i.test(el.type));
+    }
+    var KEYS = { 37: "left", 38: "up", 39: "right", 40: "down" };
+    document.addEventListener("keydown", function(e) {
+      var ui = document.getElementById("tvab-root");
+      if (ui && ui.style.display !== "none") {
+        return;
+      }
+      if (window.__tvabHuluUI && /^\/watch\//.test(location.pathname)) {
+        return;
+      }
+      var active = document.activeElement;
+      if (isText(active) && (e.keyCode === 37 || e.keyCode === 39)) {
+        return;
+      }
+      if (KEYS[e.keyCode]) {
+        if (active && active.tagName === "VIDEO") {
           return;
         }
-        primary = -dy;
-        cross = Math.abs(dx);
-      } else {
-        if (b.r.top < a.r.bottom - 2) {
-          return;
-        }
-        primary = dy;
-        cross = Math.abs(dx);
-      }
-      var score = primary + cross * 2.5;
-      if (score < bestScore) {
-        bestScore = score;
-        best = el;
-      }
-    });
-    if (best) {
-      setCurrent(best);
-    } else if (dir === "down") {
-      window.scrollBy(0, innerHeight * 0.6);
-    } else if (dir === "up") {
-      window.scrollBy(0, -innerHeight * 0.6);
-    }
-  }
-  function isText(el) {
-    return el && (el.tagName === "TEXTAREA" || el.tagName === "INPUT" && !/^(button|submit|checkbox|radio|reset|image)$/i.test(el.type));
-  }
-  var KEYS = { 37: "left", 38: "up", 39: "right", 40: "down" };
-  document.addEventListener("keydown", function(e) {
-    var ui = document.getElementById("tvab-root");
-    if (ui && ui.style.display !== "none") {
-      return;
-    }
-    if (window.__tvabHuluUI && /^\/watch\//.test(location.pathname)) {
-      return;
-    }
-    var active = document.activeElement;
-    if (isText(active) && (e.keyCode === 37 || e.keyCode === 39)) {
-      return;
-    }
-    if (KEYS[e.keyCode]) {
-      if (active && active.tagName === "VIDEO") {
-        return;
-      }
-      e.preventDefault();
-      e.stopPropagation();
-      move(KEYS[e.keyCode]);
-      return;
-    }
-    if (e.keyCode === 13 && current) {
-      if (isText(current)) {
-        current.focus();
-        return;
-      }
-      e.preventDefault();
-      e.stopPropagation();
-      current.click();
-      return;
-    }
-    if (e.keyCode === 10009) {
-      e.preventDefault();
-      if (isText(active)) {
-        active.blur();
-        return;
-      }
-      history.length > 1 ? history.back() : tizen.application.getCurrentApplication().exit();
-    }
-  }, true);
-  function boot() {
-    addStyle();
-    if (!current) {
-      setCurrent(first());
-    }
-  }
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", boot);
-  } else {
-    boot();
-  }
-  new MutationObserver(function() {
-    if (!current || !document.contains(current)) {
-      setCurrent(first());
-    }
-  }).observe(document.documentElement, { childList: true, subtree: true });
-  window.__tvabFocus = function(selector) {
-    var t0 = Date.now();
-    (function tryIt() {
-      var el = document.querySelector(selector);
-      if (el && visible(el)) {
-        setCurrent(el);
-        return;
-      }
-      if (Date.now() - t0 < 2e4) {
-        setTimeout(tryIt, 300);
-      }
-    })();
-  };
-})();
-(function tvabHuluUI() {
-  if (window.__tvabHuluUI || !/(^|\.)hulu\.com$/.test(location.hostname)) {
-    return;
-  }
-  window.__tvabHuluUI = true;
-  var API = "https://discover.hulu.com/content/v5";
-  var onWatch = function() {
-    return /^\/watch\//.test(location.pathname);
-  };
-  var KEY = { LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, OK: 13, BACK: 10009, PLAYPAUSE: 10252, PLAY: 415, PAUSE: 19, FF: 417, RW: 412, STOP: 413 };
-  function api(path) {
-    var url = path.indexOf("http") === 0 ? path.split("?")[0] : API + path;
-    return fetch(url + "?schema=1&limit=999", { credentials: "include" }).then(function(r) {
-      if (r.status === 401 || r.status === 403) {
-        throw new Error("signin");
-      }
-      return r.json();
-    });
-  }
-  function hsz(u) {
-    return u ? u + (u.indexOf("?") < 0 ? "?" : "&") + "size=600x338&format=webp" : "";
-  }
-  function img(item, kind) {
-    try {
-      var a = item.visuals.artwork[kind || "horizontal_tile"] || item.visuals.artwork.horizontal;
-      return hsz(a.image.path);
-    } catch (e) {
-      return "";
-    }
-  }
-  function title(item) {
-    try {
-      return item.visuals.headline || item.name || "";
-    } catch (e) {
-      return item.name || "";
-    }
-  }
-  function eabToId(eab) {
-    var m = /^EAB::([0-9a-f-]{36})::/.exec(String(eab || ""));
-    return m ? m[1] : null;
-  }
-  var css = [
-    "#tvab-root{position:fixed;inset:0;z-index:2147483646;background:#0b0c0f;color:#fff;font-family:Arial,Helvetica,sans-serif;overflow:hidden}",
-    "#tvab-root .hdr{height:90px;display:flex;align-items:center;padding:0 60px;font-size:40px;font-weight:bold;color:#1ce783}",
-    "#tvab-root .hdr small{color:#aaa;font-size:24px;margin-left:24px;font-weight:normal}",
-    "#tvab-root .rows{position:absolute;top:90px;left:0;right:0;bottom:0;transition:transform .2s}",
-    "#tvab-root .row{height:330px;padding-left:60px}",
-    "#tvab-root .row h2{font-size:30px;margin:10px 0 12px;color:#ddd;font-weight:bold}",
-    "#tvab-root .strip{display:flex;transition:transform .2s;white-space:nowrap}",
-    "#tvab-root .tile{flex:0 0 384px;height:216px;margin-right:24px;border-radius:10px;background:#222 center/cover no-repeat;position:relative;box-sizing:border-box;border:5px solid transparent}",
-    "#tvab-root .tile.f{border-color:#ffcc00;transform:scale(1.06)}",
-    "#tvab-root .tile span{position:absolute;left:0;right:0;bottom:-44px;font-size:24px;color:#eee;overflow:hidden;text-overflow:ellipsis}",
-    "#tvab-root .msg{position:absolute;top:40%;width:100%;text-align:center;font-size:36px;color:#ccc}",
-    "#tvab-root .btn{display:inline-block;margin-top:30px;padding:18px 40px;border-radius:12px;background:#1ce783;color:#000;font-weight:bold;border:5px solid #ffcc00}"
-  ].join("\n");
-  function addCss() {
-    if (document.getElementById("tvab-ui-css")) {
-      return;
-    }
-    var s = document.createElement("style");
-    s.id = "tvab-ui-css";
-    s.textContent = css;
-    (document.head || document.documentElement).appendChild(s);
-  }
-  var stack = [];
-  var root = null;
-  function el(tag, cls, text) {
-    var e = document.createElement(tag);
-    if (cls) {
-      e.className = cls;
-    }
-    if (text != null) {
-      e.textContent = text;
-    }
-    return e;
-  }
-  function anyArt(art) {
-    if (!art) {
-      return "";
-    }
-    var pref = ["video.horizontal.hero", "program.tile", "horizontal_tile", "horizontal"];
-    for (var i = 0; i < pref.length; i++) {
-      if (art[pref[i]] && art[pref[i]].path) {
-        return art[pref[i]].path;
-      }
-      if (art[pref[i]] && art[pref[i]].image && art[pref[i]].image.path) {
-        return art[pref[i]].image.path;
-      }
-    }
-    for (var k in art) {
-      var v = art[k];
-      if (v && (v.path || v.image && v.image.path)) {
-        return v.path || v.image.path;
-      }
-    }
-    return "";
-  }
-  function toTile(item) {
-    if (item._type === "episode" || item._type === "movie") {
-      return { label: item.name || "", image: hsz(anyArt(item.artwork) || anyArt(item.series_artwork)), play: item.id, browse: null };
-    }
-    var a = item.actions || {};
-    var playId = a.playback ? eabToId(a.playback.eab) : null;
-    var browse = a.browse && a.browse.href && /\/hubs\/(series|movie)\//.test(a.browse.href) ? a.browse.href : null;
-    return { label: title(item), image: img(item), play: playId, browse };
-  }
-  function homeScreen() {
-    return api("/view_hubs/home").then(function(j) {
-      var rows = (j.components || []).filter(function(c) {
-        return c._type === "collection" && c.items && c.items.length;
-      }).map(function(c) {
-        return { name: c.name, items: c.items.map(toTile).filter(function(t) {
-          return t.play || t.browse;
-        }) };
-      }).filter(function(r) {
-        return r.items.length;
-      });
-      var cw = rows.findIndex(function(r) {
-        return /continue watching/i.test(r.name);
-      });
-      if (cw > 0) {
-        rows.unshift(rows.splice(cw, 1)[0]);
-      }
-      return { title: "Home", rows, r: 0, c: 0 };
-    });
-  }
-  function seriesScreen(href, name) {
-    return api(href).then(function(s) {
-      var rows = [];
-      var eps = (s.components || []).find(function(c) {
-        return /episodes/i.test(c.name || "");
-      });
-      var seasonsP = eps ? api(eps.href) : Promise.resolve(null);
-      return seasonsP.then(function(sj) {
-        var seasons = sj ? sj.items || [] : [];
-        var loads = seasons.map(function(season) {
-          var items = season.items && season.items.length ? Promise.resolve(season) : api(season.href);
-          return items.then(function(full) {
-            rows.push({ name: season.name, items: (full.items || []).map(function(ep) {
-              var t = toTile(ep);
-              var n = ep.number || ep.entity_metadata && ep.entity_metadata.episode_number;
-              t.label = (n ? n + ". " : "") + (ep.name || t.label);
-              return t;
-            }).filter(function(t) {
-              return t.play;
-            }) });
-          }).catch(function() {
-          });
-        });
-        return Promise.all(loads).then(function() {
-          rows.sort(function(a, b) {
-            return (parseInt(a.name.replace(/\D/g, ""), 10) || 0) - (parseInt(b.name.replace(/\D/g, ""), 10) || 0);
-          });
-          (s.components || []).forEach(function(c) {
-            if (!/episodes/i.test(c.name || "") && c.items && c.items.length && c.items[0]._type !== "collection") {
-              rows.push({ name: c.name, items: c.items.map(toTile).filter(function(t) {
-                return t.play || t.browse;
-              }) });
-            }
-          });
-          return { title: name || s.name || "Show", rows: rows.filter(function(r) {
-            return r.items.length;
-          }), r: 0, c: 0 };
-        });
-      });
-    });
-  }
-  function render() {
-    var scr = stack[stack.length - 1];
-    if (!root) {
-      root = el("div");
-      root.id = "tvab-root";
-      (document.body || document.documentElement).appendChild(root);
-    }
-    root.textContent = "";
-    var hdr = el("div", "hdr", "hulu");
-    hdr.appendChild(el("small", null, scr.title + "  \xB7  No Ads"));
-    root.appendChild(hdr);
-    var rowsEl = el("div", "rows");
-    root.appendChild(rowsEl);
-    scr.rows.forEach(function(row, ri) {
-      var rEl = el("div", "row");
-      if (ri < scr.r - 2 || ri > scr.r + 4) {
-        rowsEl.appendChild(rEl);
-        return;
-      }
-      rEl.appendChild(el("h2", null, row.name));
-      var strip = el("div", "strip");
-      row.items.forEach(function(t, ci) {
-        var tile = el("div", "tile" + (ri === scr.r && ci === scr.c ? " f" : ""));
-        var cc = ri === scr.r ? scr.c : row.c || 0;
-        if (t.image && ri >= scr.r - 1 && ri <= scr.r + 2 && ci >= cc - 2 && ci <= cc + 6) {
-          tile.style.backgroundImage = 'url("' + t.image + '")';
-        }
-        tile.appendChild(el("span", null, t.label));
-        strip.appendChild(tile);
-      });
-      strip.style.transform = "translateX(" + -Math.max(0, (ri === scr.r ? scr.c : row.c || 0) - 1) * 408 + "px)";
-      rEl.appendChild(strip);
-      rowsEl.appendChild(rEl);
-    });
-    rowsEl.style.transform = "translateY(" + -Math.max(0, scr.r) * 330 + "px)";
-  }
-  function message(text, buttonText) {
-    if (!root) {
-      root = el("div");
-      root.id = "tvab-root";
-      (document.body || document.documentElement).appendChild(root);
-    }
-    root.textContent = "";
-    var m = el("div", "msg", text);
-    if (buttonText) {
-      m.appendChild(el("br"));
-      m.appendChild(el("div", "btn", buttonText));
-    }
-    root.appendChild(m);
-  }
-  function push(p) {
-    message("Loading\u2026");
-    return p.then(function(scr) {
-      stack.push(scr);
-      render();
-    }).catch(function(e) {
-      if (String(e && e.message) === "signin") {
-        signinPrompt();
-      } else {
-        message("Could not load Hulu. Press OK to retry.");
-        retry = function() {
-          start();
-        };
-      }
-    });
-  }
-  var retry = null, signin = false;
-  function signinPrompt() {
-    signin = true;
-    message("Sign in to Hulu once. Press OK, then type your email and password with the TV keyboard.", "Sign in");
-  }
-  function hideUI() {
-    if (root) {
-      root.style.display = "none";
-    }
-  }
-  function showUI() {
-    if (root) {
-      root.style.display = "";
-    }
-  }
-  function onKey(e) {
-    var k = e.keyCode;
-    if (onWatch()) {
-      return playerKey(e);
-    }
-    if (!root || root.style.display === "none") {
-      return;
-    }
-    if (signin) {
-      if (k === KEY.OK) {
         e.preventDefault();
-        signin = false;
-        hideUI();
-        location.href = "https://auth.hulu.com/web/login";
+        e.stopPropagation();
+        move(KEYS[e.keyCode]);
+        return;
       }
+      if (e.keyCode === 13 && current) {
+        if (isText(current)) {
+          current.focus();
+          return;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        current.click();
+        return;
+      }
+      if (e.keyCode === 10009) {
+        e.preventDefault();
+        if (isText(active)) {
+          active.blur();
+          return;
+        }
+        history.length > 1 ? history.back() : tizen.application.getCurrentApplication().exit();
+      }
+    }, true);
+    function boot() {
+      try {
+        addStyle();
+        if (!current) {
+          setCurrent(first());
+        }
+      } catch (e) {
+      }
+      try {
+        new MutationObserver(function() {
+          try {
+            if (!current || !document.contains(current)) {
+              setCurrent(first());
+            }
+          } catch (e) {
+          }
+        }).observe(document.documentElement, { childList: true, subtree: true });
+      } catch (e) {
+      }
+    }
+    if (document.readyState === "loading" || !document.documentElement || !document.body) {
+      document.addEventListener("DOMContentLoaded", boot);
+    } else {
+      boot();
+    }
+    window.__tvabFocus = function(selector) {
+      var t0 = Date.now();
+      (function tryIt() {
+        var el = document.querySelector(selector);
+        if (el && visible(el)) {
+          setCurrent(el);
+          return;
+        }
+        if (Date.now() - t0 < 2e4) {
+          setTimeout(tryIt, 300);
+        }
+      })();
+    };
+  })();
+} catch (e) {
+}
+try {
+  (function tvabHuluUI() {
+    if (window.__tvabHuluUI || !/(^|\.)hulu\.com$/.test(location.hostname)) {
       return;
     }
-    if (retry && k === KEY.OK) {
-      e.preventDefault();
-      var f = retry;
-      retry = null;
-      f();
-      return;
+    window.__tvabHuluUI = true;
+    var API = "https://discover.hulu.com/content/v5";
+    var onWatch = function() {
+      return /^\/watch\//.test(location.pathname);
+    };
+    var KEY = { LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, OK: 13, BACK: 10009, PLAYPAUSE: 10252, PLAY: 415, PAUSE: 19, FF: 417, RW: 412, STOP: 413 };
+    function api(path) {
+      var url = path.indexOf("http") === 0 ? path.split("?")[0] : API + path;
+      return fetch(url + "?schema=1&limit=999", { credentials: "include" }).then(function(r) {
+        if (r.status === 401 || r.status === 403) {
+          throw new Error("signin");
+        }
+        return r.json();
+      });
     }
-    var scr = stack[stack.length - 1];
-    if (!scr) {
-      return;
+    function hsz(u) {
+      return u ? u + (u.indexOf("?") < 0 ? "?" : "&") + "size=600x338&format=webp" : "";
     }
-    var row = scr.rows[scr.r];
-    var handled = true;
-    if (k === KEY.RIGHT) {
-      scr.c = Math.min(row.items.length - 1, scr.c + 1);
-    } else if (k === KEY.LEFT) {
-      scr.c = Math.max(0, scr.c - 1);
-    } else if (k === KEY.DOWN) {
-      row.c = scr.c;
-      scr.r = Math.min(scr.rows.length - 1, scr.r + 1);
-      scr.c = Math.min(scr.rows[scr.r].c || 0, scr.rows[scr.r].items.length - 1);
-    } else if (k === KEY.UP) {
-      row.c = scr.c;
-      scr.r = Math.max(0, scr.r - 1);
-      scr.c = Math.min(scr.rows[scr.r].c || 0, scr.rows[scr.r].items.length - 1);
-    } else if (k === KEY.OK) {
-      var t = row.items[scr.c];
-      if (t.browse && stack.length === 1 && !/^\d+\./.test(t.label)) {
-        push(seriesScreen(t.browse, t.label));
-        return stop(e);
+    function img(item, kind) {
+      try {
+        var a = item.visuals.artwork[kind || "horizontal_tile"] || item.visuals.artwork.horizontal;
+        return hsz(a.image.path);
+      } catch (e) {
+        return "";
       }
-      if (t.play) {
-        sessionStorage.setItem("tvab-stack", JSON.stringify(stack));
-        location.href = "/watch/" + t.play;
-        return stop(e);
+    }
+    function title(item) {
+      try {
+        return item.visuals.headline || item.name || "";
+      } catch (e) {
+        return item.name || "";
       }
-      if (t.browse) {
-        push(seriesScreen(t.browse, t.label));
-        return stop(e);
+    }
+    function eabToId(eab) {
+      var m = /^EAB::([0-9a-f-]{36})::/.exec(String(eab || ""));
+      return m ? m[1] : null;
+    }
+    var css = [
+      "#tvab-root{position:fixed;inset:0;z-index:2147483646;background:#0b0c0f;color:#fff;font-family:Arial,Helvetica,sans-serif;overflow:hidden}",
+      "#tvab-root .hdr{height:90px;display:flex;align-items:center;padding:0 60px;font-size:40px;font-weight:bold;color:#1ce783}",
+      "#tvab-root .hdr small{color:#aaa;font-size:24px;margin-left:24px;font-weight:normal}",
+      "#tvab-root .rows{position:absolute;top:90px;left:0;right:0;bottom:0;transition:transform .2s}",
+      "#tvab-root .row{height:330px;padding-left:60px}",
+      "#tvab-root .row h2{font-size:30px;margin:10px 0 12px;color:#ddd;font-weight:bold}",
+      "#tvab-root .strip{display:flex;transition:transform .2s;white-space:nowrap}",
+      "#tvab-root .tile{flex:0 0 384px;height:216px;margin-right:24px;border-radius:10px;background:#222 center/cover no-repeat;position:relative;box-sizing:border-box;border:5px solid transparent}",
+      "#tvab-root .tile.f{border-color:#ffcc00;transform:scale(1.06)}",
+      "#tvab-root .tile span{position:absolute;left:0;right:0;bottom:-44px;font-size:24px;color:#eee;overflow:hidden;text-overflow:ellipsis}",
+      "#tvab-root .msg{position:absolute;top:40%;width:100%;text-align:center;font-size:36px;color:#ccc}",
+      "#tvab-root .btn{display:inline-block;margin-top:30px;padding:18px 40px;border-radius:12px;background:#1ce783;color:#000;font-weight:bold;border:5px solid #ffcc00}"
+    ].join("\n");
+    function addCss() {
+      if (document.getElementById("tvab-ui-css")) {
+        return;
       }
-    } else if (k === KEY.BACK) {
-      if (stack.length > 1) {
-        stack.pop();
-        render();
-      } else {
-        try {
-          tizen.application.getCurrentApplication().exit();
-        } catch (x) {
+      var s = document.createElement("style");
+      s.id = "tvab-ui-css";
+      s.textContent = css;
+      var host = document.head || document.documentElement;
+      if (!host) {
+        return;
+      }
+      host.appendChild(s);
+    }
+    var stack = [];
+    var root = null;
+    function el(tag, cls, text) {
+      var e = document.createElement(tag);
+      if (cls) {
+        e.className = cls;
+      }
+      if (text != null) {
+        e.textContent = text;
+      }
+      return e;
+    }
+    function anyArt(art) {
+      if (!art) {
+        return "";
+      }
+      var pref = ["video.horizontal.hero", "program.tile", "horizontal_tile", "horizontal"];
+      for (var i = 0; i < pref.length; i++) {
+        if (art[pref[i]] && art[pref[i]].path) {
+          return art[pref[i]].path;
+        }
+        if (art[pref[i]] && art[pref[i]].image && art[pref[i]].image.path) {
+          return art[pref[i]].image.path;
         }
       }
-    } else {
-      handled = false;
-    }
-    if (handled) {
-      stop(e);
-      render();
-    }
-  }
-  function stop(e) {
-    e.preventDefault();
-    e.stopPropagation();
-  }
-  function video() {
-    return document.querySelector("video");
-  }
-  function playerKey(e) {
-    var v = video(), k = e.keyCode;
-    if (k === KEY.BACK) {
-      stop(e);
-      location.href = "/hub/home";
-      return;
-    }
-    if (!v) {
-      return;
-    }
-    if (k === KEY.OK || k === KEY.PLAYPAUSE) {
-      stop(e);
-      if (v.paused) {
-        v.play();
-      } else {
-        v.pause();
+      for (var k in art) {
+        var v = art[k];
+        if (v && (v.path || v.image && v.image.path)) {
+          return v.path || v.image.path;
+        }
       }
-    } else if (k === KEY.PLAY) {
-      stop(e);
-      v.play();
-    } else if (k === KEY.PAUSE || k === KEY.STOP) {
-      stop(e);
-      v.pause();
-    } else if (k === KEY.RIGHT || k === KEY.FF) {
-      stop(e);
-      v.currentTime = Math.min(v.duration || 1e9, v.currentTime + 10);
-    } else if (k === KEY.LEFT || k === KEY.RW) {
-      stop(e);
-      v.currentTime = Math.max(0, v.currentTime - 10);
+      return "";
     }
-  }
-  document.addEventListener("keydown", onKey, true);
-  function start() {
-    addCss();
-    if (onWatch()) {
-      return;
+    function toTile(item) {
+      if (item._type === "episode" || item._type === "movie") {
+        return { label: item.name || "", image: hsz(anyArt(item.artwork) || anyArt(item.series_artwork)), play: item.id, browse: null };
+      }
+      var a = item.actions || {};
+      var playId = a.playback ? eabToId(a.playback.eab) : null;
+      var browse = a.browse && a.browse.href && /\/hubs\/(series|movie)\//.test(a.browse.href) ? a.browse.href : null;
+      return { label: title(item), image: img(item), play: playId, browse };
     }
-    if (/auth\.hulu\.com|\/login|\/account/.test(location.href)) {
-      return;
+    function homeScreen() {
+      return api("/view_hubs/home").then(function(j) {
+        var rows = (j.components || []).filter(function(c) {
+          return c._type === "collection" && c.items && c.items.length;
+        }).map(function(c) {
+          return { name: c.name, items: c.items.map(toTile).filter(function(t) {
+            return t.play || t.browse;
+          }) };
+        }).filter(function(r) {
+          return r.items.length;
+        });
+        var cw = rows.findIndex(function(r) {
+          return /continue watching/i.test(r.name);
+        });
+        if (cw > 0) {
+          rows.unshift(rows.splice(cw, 1)[0]);
+        }
+        return { title: "Home", rows, r: 0, c: 0 };
+      });
     }
-    var saved = null;
-    try {
-      saved = JSON.parse(sessionStorage.getItem("tvab-stack") || "null");
-      sessionStorage.removeItem("tvab-stack");
-    } catch (x) {
+    function seriesScreen(href, name) {
+      return api(href).then(function(s) {
+        var rows = [];
+        var eps = (s.components || []).find(function(c) {
+          return /episodes/i.test(c.name || "");
+        });
+        var seasonsP = eps ? api(eps.href) : Promise.resolve(null);
+        return seasonsP.then(function(sj) {
+          var seasons = sj ? sj.items || [] : [];
+          var loads = seasons.map(function(season) {
+            var items = season.items && season.items.length ? Promise.resolve(season) : api(season.href);
+            return items.then(function(full) {
+              rows.push({ name: season.name, items: (full.items || []).map(function(ep) {
+                var t = toTile(ep);
+                var n = ep.number || ep.entity_metadata && ep.entity_metadata.episode_number;
+                t.label = (n ? n + ". " : "") + (ep.name || t.label);
+                return t;
+              }).filter(function(t) {
+                return t.play;
+              }) });
+            }).catch(function() {
+            });
+          });
+          return Promise.all(loads).then(function() {
+            rows.sort(function(a, b) {
+              return (parseInt(a.name.replace(/\D/g, ""), 10) || 0) - (parseInt(b.name.replace(/\D/g, ""), 10) || 0);
+            });
+            (s.components || []).forEach(function(c) {
+              if (!/episodes/i.test(c.name || "") && c.items && c.items.length && c.items[0]._type !== "collection") {
+                rows.push({ name: c.name, items: c.items.map(toTile).filter(function(t) {
+                  return t.play || t.browse;
+                }) });
+              }
+            });
+            return { title: name || s.name || "Show", rows: rows.filter(function(r) {
+              return r.items.length;
+            }), r: 0, c: 0 };
+          });
+        });
+      });
     }
-    if (saved && saved.length) {
-      stack = saved;
-      render();
-      return;
+    function render() {
+      var scr = stack[stack.length - 1];
+      if (!root) {
+        root = el("div");
+        root.id = "tvab-root";
+        (document.body || document.documentElement).appendChild(root);
+      }
+      root.textContent = "";
+      var hdr = el("div", "hdr", "hulu");
+      hdr.appendChild(el("small", null, scr.title + "  \xB7  No Ads"));
+      root.appendChild(hdr);
+      var rowsEl = el("div", "rows");
+      root.appendChild(rowsEl);
+      scr.rows.forEach(function(row, ri) {
+        var rEl = el("div", "row");
+        if (ri < scr.r - 2 || ri > scr.r + 4) {
+          rowsEl.appendChild(rEl);
+          return;
+        }
+        rEl.appendChild(el("h2", null, row.name));
+        var strip = el("div", "strip");
+        row.items.forEach(function(t, ci) {
+          var tile = el("div", "tile" + (ri === scr.r && ci === scr.c ? " f" : ""));
+          var cc = ri === scr.r ? scr.c : row.c || 0;
+          if (t.image && ri >= scr.r - 1 && ri <= scr.r + 2 && ci >= cc - 2 && ci <= cc + 6) {
+            tile.style.backgroundImage = 'url("' + t.image + '")';
+          }
+          tile.appendChild(el("span", null, t.label));
+          strip.appendChild(tile);
+        });
+        strip.style.transform = "translateX(" + -Math.max(0, (ri === scr.r ? scr.c : row.c || 0) - 1) * 408 + "px)";
+        rEl.appendChild(strip);
+        rowsEl.appendChild(rEl);
+      });
+      rowsEl.style.transform = "translateY(" + -Math.max(0, scr.r) * 330 + "px)";
     }
-    stack = [];
-    push(homeScreen());
-  }
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", start);
-  } else {
-    start();
-  }
-})();
+    function message(text, buttonText) {
+      if (!root) {
+        root = el("div");
+        root.id = "tvab-root";
+        (document.body || document.documentElement).appendChild(root);
+      }
+      root.textContent = "";
+      var m = el("div", "msg", text);
+      if (buttonText) {
+        m.appendChild(el("br"));
+        m.appendChild(el("div", "btn", buttonText));
+      }
+      root.appendChild(m);
+    }
+    function push(p) {
+      message("Loading\u2026");
+      return p.then(function(scr) {
+        stack.push(scr);
+        render();
+      }).catch(function(e) {
+        if (String(e && e.message) === "signin") {
+          signinPrompt();
+        } else {
+          message("Could not load Hulu. Press OK to retry.");
+          retry = function() {
+            start();
+          };
+        }
+      });
+    }
+    var retry = null, signin = false;
+    function signinPrompt() {
+      signin = true;
+      message("Sign in to Hulu once. Press OK, then type your email and password with the TV keyboard.", "Sign in");
+    }
+    function hideUI() {
+      if (root) {
+        root.style.display = "none";
+      }
+    }
+    function showUI() {
+      if (root) {
+        root.style.display = "";
+      }
+    }
+    function onKey(e) {
+      var k = e.keyCode;
+      if (onWatch()) {
+        return playerKey(e);
+      }
+      if (!root || root.style.display === "none") {
+        return;
+      }
+      if (signin) {
+        if (k === KEY.OK) {
+          e.preventDefault();
+          signin = false;
+          hideUI();
+          location.href = "https://auth.hulu.com/web/login";
+        }
+        return;
+      }
+      if (retry && k === KEY.OK) {
+        e.preventDefault();
+        var f = retry;
+        retry = null;
+        f();
+        return;
+      }
+      var scr = stack[stack.length - 1];
+      if (!scr) {
+        return;
+      }
+      var row = scr.rows[scr.r];
+      var handled = true;
+      if (k === KEY.RIGHT) {
+        scr.c = Math.min(row.items.length - 1, scr.c + 1);
+      } else if (k === KEY.LEFT) {
+        scr.c = Math.max(0, scr.c - 1);
+      } else if (k === KEY.DOWN) {
+        row.c = scr.c;
+        scr.r = Math.min(scr.rows.length - 1, scr.r + 1);
+        scr.c = Math.min(scr.rows[scr.r].c || 0, scr.rows[scr.r].items.length - 1);
+      } else if (k === KEY.UP) {
+        row.c = scr.c;
+        scr.r = Math.max(0, scr.r - 1);
+        scr.c = Math.min(scr.rows[scr.r].c || 0, scr.rows[scr.r].items.length - 1);
+      } else if (k === KEY.OK) {
+        var t = row.items[scr.c];
+        if (t.browse && stack.length === 1 && !/^\d+\./.test(t.label)) {
+          push(seriesScreen(t.browse, t.label));
+          return stop(e);
+        }
+        if (t.play) {
+          sessionStorage.setItem("tvab-stack", JSON.stringify(stack));
+          location.href = "/watch/" + t.play;
+          return stop(e);
+        }
+        if (t.browse) {
+          push(seriesScreen(t.browse, t.label));
+          return stop(e);
+        }
+      } else if (k === KEY.BACK) {
+        if (stack.length > 1) {
+          stack.pop();
+          render();
+        } else {
+          try {
+            tizen.application.getCurrentApplication().exit();
+          } catch (x) {
+          }
+        }
+      } else {
+        handled = false;
+      }
+      if (handled) {
+        stop(e);
+        render();
+      }
+    }
+    function stop(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    function video() {
+      return document.querySelector("video");
+    }
+    function playerKey(e) {
+      var v = video(), k = e.keyCode;
+      if (k === KEY.BACK) {
+        stop(e);
+        location.href = "/hub/home";
+        return;
+      }
+      if (!v) {
+        return;
+      }
+      if (k === KEY.OK || k === KEY.PLAYPAUSE) {
+        stop(e);
+        if (v.paused) {
+          v.play();
+        } else {
+          v.pause();
+        }
+      } else if (k === KEY.PLAY) {
+        stop(e);
+        v.play();
+      } else if (k === KEY.PAUSE || k === KEY.STOP) {
+        stop(e);
+        v.pause();
+      } else if (k === KEY.RIGHT || k === KEY.FF) {
+        stop(e);
+        v.currentTime = Math.min(v.duration || 1e9, v.currentTime + 10);
+      } else if (k === KEY.LEFT || k === KEY.RW) {
+        stop(e);
+        v.currentTime = Math.max(0, v.currentTime - 10);
+      }
+    }
+    document.addEventListener("keydown", onKey, true);
+    function start() {
+      addCss();
+      if (onWatch()) {
+        return;
+      }
+      if (/auth\.hulu\.com|\/login|\/account/.test(location.href)) {
+        return;
+      }
+      var saved = null;
+      try {
+        saved = JSON.parse(sessionStorage.getItem("tvab-stack") || "null");
+        sessionStorage.removeItem("tvab-stack");
+      } catch (x) {
+      }
+      if (saved && saved.length) {
+        stack = saved;
+        render();
+        return;
+      }
+      stack = [];
+      push(homeScreen());
+    }
+    if (document.readyState === "loading" || !document.body) {
+      document.addEventListener("DOMContentLoaded", function() {
+        try {
+          start();
+        } catch (e) {
+        }
+      });
+    } else {
+      try {
+        start();
+      } catch (e) {
+      }
+    }
+  })();
+} catch (e) {
+}
 try {
   window.__tvabFocus && window.__tvabFocus("input[type=email], input[name*=email i], input[autocomplete=username], input[autocomplete=email]");
 } catch (e) {
