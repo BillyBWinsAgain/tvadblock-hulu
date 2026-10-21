@@ -1435,6 +1435,9 @@ try {
       if (window.__tvabHuluUI && /^\/watch\//.test(location.pathname)) {
         return;
       }
+      if (window.__tvabMaxUI && /^\/video\/watch\//.test(location.pathname)) {
+        return;
+      }
       var active = document.activeElement;
       if (isText(active) && (e.keyCode === 37 || e.keyCode === 39)) {
         return;
