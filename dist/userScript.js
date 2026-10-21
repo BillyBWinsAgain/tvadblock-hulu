@@ -1,3 +1,43 @@
+try {
+  (function tvabLauncherGuard() {
+    if (location.protocol !== "file:") {
+      return;
+    }
+    var nx = function() {
+    };
+    try {
+      var A = tizen.application, P = Object.getPrototypeOf(A.getCurrentApplication());
+      try {
+        P.exit = nx;
+      } catch (e) {
+      }
+      try {
+        Object.defineProperty(P, "exit", { value: nx, configurable: true, writable: true });
+      } catch (e) {
+      }
+      var g = A.getCurrentApplication, w = function() {
+        var x = g.apply(A, arguments);
+        try {
+          x.exit = nx;
+        } catch (e) {
+        }
+        return x;
+      };
+      try {
+        A.getCurrentApplication = w;
+      } catch (e) {
+      }
+      try {
+        Object.getPrototypeOf(A).getCurrentApplication = w;
+      } catch (e) {
+      }
+      window.__tvabNoExit = A.getCurrentApplication().exit === nx ? 2 : 1;
+    } catch (e) {
+      window.__tvabNoExit = 0;
+    }
+  })();
+} catch (e) {
+}
 (function tvadblock() {
   if (!/(^|\.)(hulu\.com)$/.test(location.hostname) && location.protocol !== "file:" && location.protocol !== "app:" && !/^(localhost|127.0.0.1)$/.test(location.hostname)) {
     return;
@@ -1554,7 +1594,8 @@ try {
       return m ? m[1] : null;
     }
     var css = [
-      "#tvab-root{position:fixed;inset:0;z-index:2147483646;background:#0b0c0f;color:#fff;font-family:Arial,Helvetica,sans-serif;overflow:hidden}",
+      "#tvab-root{position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:2147483646;background:#0b0c0f;color:#fff;font-family:Arial,Helvetica,sans-serif;overflow:hidden}",
+      "body.tvab-on>*:not(#tvab-root){display:none!important}",
       "#tvab-root .hdr{height:90px;display:flex;align-items:center;padding:0 60px;font-size:40px;font-weight:bold;color:#1ce783}",
       "#tvab-root .hdr small{color:#aaa;font-size:24px;margin-left:24px;font-weight:normal}",
       "#tvab-root .rows{position:absolute;top:90px;left:0;right:0;bottom:0;transition:transform .2s}",
@@ -1690,6 +1731,7 @@ try {
         root.id = "tvab-root";
         (document.body || document.documentElement).appendChild(root);
       }
+      cover();
       root.textContent = "";
       var hdr = el("div", "hdr", "hulu");
       hdr.appendChild(el("small", null, scr.title + "  \xB7  No Ads"));
@@ -1725,6 +1767,7 @@ try {
         root.id = "tvab-root";
         (document.body || document.documentElement).appendChild(root);
       }
+      cover();
       root.textContent = "";
       var m = el("div", "msg", text);
       if (buttonText) {
@@ -1754,14 +1797,23 @@ try {
       signin = true;
       message("Sign in to Hulu once. Press OK, then type your email and password with the TV keyboard.", "Sign in");
     }
+    function cover() {
+      root.style.display = "";
+      if (document.body) {
+        document.body.classList.add("tvab-on");
+      }
+    }
     function hideUI() {
       if (root) {
         root.style.display = "none";
       }
+      if (document.body) {
+        document.body.classList.remove("tvab-on");
+      }
     }
     function showUI() {
       if (root) {
-        root.style.display = "";
+        cover();
       }
     }
     function onKey(e) {
